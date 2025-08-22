@@ -1,0 +1,6 @@
+@NakitAkisDashboard.API_HostAddress = http://localhost:5169
+
+GET {{NakitAkisDashboard.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
