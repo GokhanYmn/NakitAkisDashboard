@@ -1,0 +1,27 @@
+{
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
+  "postcss.validate": false,
+  "files.associations": {
+    "*.css": "postcss"
+  },
+  "css.lint.unknownAtRules": "ignore",
+  "css.customData": [
+    ".vscode/css_custom_data.json"
+  ],
+  "tailwindCSS.includeLanguages": {
+    "typescript": "typescript",
+    "javascript": "javascript",
+    "typescriptreact": "typescriptreact",
+    "javascriptreact": "javascriptreact",
+    "html": "html",
+    "css": "css",
+    "postcss": "postcss"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["className\\s*:\\s*['\"`]([^'\"`]*)['\"`]", "([a-zA-Z0-9\\-:]+)"],
+    ["class\\s*=\\s*['\"`]([^'\"`]*)['\"`]", "([a-zA-Z0-9\\-:]+)"]
+  ]
+}

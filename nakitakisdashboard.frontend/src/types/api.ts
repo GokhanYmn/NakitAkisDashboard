@@ -1,3 +1,5 @@
+// src/types/api.ts
+
 // API Response Types
 export interface ApiResponse<T> {
   success: boolean;
@@ -91,4 +93,12 @@ export interface ExportRequest {
   level: 'basic' | 'detailed' | 'full';
   format: 'pdf' | 'excel';
   analysisData: AnalysisRequest;
+}
+
+// Health Check Response
+export interface HealthCheckResponse {
+  status: string;
+  timestamp: string;
+  version?: string;
+  details?: Record<string, any>;
 }

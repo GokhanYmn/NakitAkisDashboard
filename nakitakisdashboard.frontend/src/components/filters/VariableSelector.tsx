@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useKaynakKuruluslar, useFonlar, useIhraclar } from '../../hooks/useApi';
 import Loading from '../ui/Loading';
-
 interface VariableSelectorProps {
   onSelectionChange: (selection: {
     kaynakKurulus: string;

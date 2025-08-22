@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useManualApi } from '../hooks/useApi';
-import ApiService from '../services/api';
-import Loading from './ui/Loading';
+import { useManualApi } from '../../hooks/useApi';
+import ApiService from '../../services/api';
+import Loading from '../ui/Loading';
+import { ApiResponse, AnalysisResponse, AnalysisRequest } from '../../types/api';
 
 interface AnalysisCardProps {
   kaynakKurulus: string;
@@ -16,12 +17,13 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   ihracNo,
   faizOrani
 }) => {
-  const { data: analysisData, loading, error, execute } = useManualApi();
-  const [lastCalculatedWith, setLastCalculatedWith] = useState<any>(null);
+  // TİP GÜVENLİĞİ İLE HOOK KULLANIMI
+  const { data: analysisData, loading, error, execute } = useManualApi<ApiResponse<AnalysisResponse>>();
+  const [lastCalculatedWith, setLastCalculatedWith] = useState<AnalysisRequest | null>(null);
 
   const handleCalculate = async () => {
     try {
-      const request = {
+      const request: AnalysisRequest = {
         kaynakKurulus,
         faizOrani,
         ...(fonNo && { fonNo }),
@@ -110,7 +112,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
         </div>
       )}
 
-      {/* Results */}
+      {/* Results - TİP GÜVENLİ ERİŞİM */}
       {!loading && !error && analysisData?.data && (
         <div className="space-y-6">
           {/* Main Metrics */}
@@ -187,3 +189,30 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
           )}
         </div>
       )}
+
+      {/* Empty State - No calculation yet */}
+      {!loading && !error && !analysisData && (
+        <div className="text-center py-12">
+          <div className="text-gray-400 dark:text-gray-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+            Analiz Bekleniyor
+          </h4>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Nakit akış analizini başlatmak için yukarıdaki butona tıklayın
+          </p>
+          {!canCalculate && (
+            <p className="text-sm text-warning-600 dark:text-warning-400">
+              ⚠️ Analiz için gerekli parametreler: Kaynak Kuruluş ve Faiz Oranı
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AnalysisCard;

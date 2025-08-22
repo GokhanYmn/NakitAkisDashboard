@@ -1,5 +1,8 @@
+// src/hooks/useApi.ts
+
 import { useState, useEffect, useCallback } from 'react';
 import ApiService from '../services/api';
+import { ApiResponse, AnalysisResponse, VariableOption, HealthCheckResponse } from '../types/api';
 
 // Generic API hook
 export function useApi<T>(
@@ -46,7 +49,7 @@ export function useApi<T>(
 
 // Health check hook
 export function useHealthCheck() {
-  return useApi(
+  return useApi<HealthCheckResponse>(
     () => ApiService.healthCheck(),
     [],
     true
@@ -55,7 +58,7 @@ export function useHealthCheck() {
 
 // Variables hooks
 export function useKaynakKuruluslar() {
-  return useApi(
+  return useApi<ApiResponse<VariableOption[]>>(
     () => ApiService.getKaynakKuruluslar(),
     [],
     true
@@ -63,7 +66,7 @@ export function useKaynakKuruluslar() {
 }
 
 export function useFonlar(kaynakKurulus: string) {
-  return useApi(
+  return useApi<ApiResponse<VariableOption[]>>(
     () => ApiService.getFonlar(kaynakKurulus),
     [kaynakKurulus],
     !!kaynakKurulus
@@ -71,7 +74,7 @@ export function useFonlar(kaynakKurulus: string) {
 }
 
 export function useIhraclar(kaynakKurulus: string, fonNo: string) {
-  return useApi(
+  return useApi<ApiResponse<VariableOption[]>>(
     () => ApiService.getIhraclar(kaynakKurulus, fonNo),
     [kaynakKurulus, fonNo],
     !!(kaynakKurulus && fonNo)
@@ -80,7 +83,7 @@ export function useIhraclar(kaynakKurulus: string, fonNo: string) {
 
 // Variable hierarchy hook
 export function useVariableHierarchy(kaynakKurulus?: string, fonNo?: string) {
-  return useApi(
+  return useApi<ApiResponse<any>>(
     () => ApiService.getVariableHierarchy(kaynakKurulus, fonNo),
     [kaynakKurulus, fonNo],
     true
@@ -89,7 +92,7 @@ export function useVariableHierarchy(kaynakKurulus?: string, fonNo?: string) {
 
 // Filter stats hook
 export function useFilterStats() {
-  return useApi(
+  return useApi<ApiResponse<any>>(
     () => ApiService.getFilterStats(),
     [],
     true
@@ -98,7 +101,7 @@ export function useFilterStats() {
 
 // Analysis hooks
 export function useAnalysisSummary(kaynakKurulus: string, faizOrani: number) {
-  return useApi(
+  return useApi<ApiResponse<any>>(
     () => ApiService.getAnalysisSummary(kaynakKurulus, faizOrani),
     [kaynakKurulus, faizOrani],
     !!(kaynakKurulus && faizOrani > 0)
@@ -107,7 +110,7 @@ export function useAnalysisSummary(kaynakKurulus: string, faizOrani: number) {
 
 // Trends hooks
 export function useTrendsSummary(kaynakKurulus: string, period: string = 'week') {
-  return useApi(
+  return useApi<ApiResponse<any>>(
     () => ApiService.getTrendsSummary(kaynakKurulus, period),
     [kaynakKurulus, period],
     !!kaynakKurulus
@@ -115,7 +118,7 @@ export function useTrendsSummary(kaynakKurulus: string, period: string = 'week')
 }
 
 export function useRealtimeTrendStatus(kaynakKurulus: string) {
-  return useApi(
+  return useApi<ApiResponse<any>>(
     () => ApiService.getRealtimeTrendStatus(kaynakKurulus),
     [kaynakKurulus],
     !!kaynakKurulus
@@ -124,7 +127,7 @@ export function useRealtimeTrendStatus(kaynakKurulus: string) {
 
 // Cash flow analysis hook
 export function useCashFlowAnalysis(period: string = 'month', limit: number = 100) {
-  return useApi(
+  return useApi<ApiResponse<any>>(
     () => ApiService.getCashFlowAnalysis(period, limit),
     [period, limit],
     true
@@ -133,15 +136,15 @@ export function useCashFlowAnalysis(period: string = 'month', limit: number = 10
 
 // Export formats hook
 export function useExportFormats() {
-  return useApi(
+  return useApi<ApiResponse<any>>(
     () => ApiService.getExportFormats(),
     [],
     true
   );
 }
 
-// Manual API calls with loading states
-export function useManualApi<T>() {
+// Manual API calls with loading states - TİP GÜVENLİĞİ İLE
+export function useManualApi<T = ApiResponse<AnalysisResponse>>() {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
