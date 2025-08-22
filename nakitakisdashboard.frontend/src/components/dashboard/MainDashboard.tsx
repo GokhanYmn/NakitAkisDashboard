@@ -1,9 +1,9 @@
 // src/components/dashboard/MainDashboard.tsx
-
 import React, { useState } from 'react';
 import VariableSelector from '../filters/VariableSelector';
 import AnalysisCard from './AnalysisCard';
-import { useHealthCheck } from '../../hooks/useApi';
+import TrendChart from '../charts/TrendChart';
+import { useHealthCheck, useSimpleTrends } from '../../hooks/useApi';
 
 interface DashboardSelection {
   kaynakKurulus: string;
@@ -20,11 +20,25 @@ const MainDashboard: React.FC = () => {
     faizOrani: null
   });
 
+  const [activeTab, setActiveTab] = useState<'analysis' | 'trends' | 'export'>('analysis');
+
   const { data: healthData, loading: healthLoading, error: healthError } = useHealthCheck();
+  
+  // Trends data - sadece kuruluş seçildiğinde çek
+  const { data: trendsData, loading: trendsLoading } = useSimpleTrends(
+    selection.kaynakKurulus,
+    'week',
+    selection.fonNo,
+    selection.ihracNo,
+    50
+  );
 
   const handleSelectionChange = (newSelection: DashboardSelection) => {
     setSelection(newSelection);
   };
+
+  const isAnalysisReady = selection.kaynakKurulus && selection.faizOrani;
+  const isTrendsReady = selection.kaynakKurulus;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -88,76 +102,149 @@ const MainDashboard: React.FC = () => {
           {/* Variable Selector */}
           <VariableSelector onSelectionChange={handleSelectionChange} />
 
-          {/* Analysis Section */}
-          {selection.kaynakKurulus && selection.faizOrani && (
-            <AnalysisCard
-              kaynakKurulus={selection.kaynakKurulus}
-              fonNo={selection.fonNo}
-              ihracNo={selection.ihracNo}
-              faizOrani={selection.faizOrani}
-            />
+          {/* Tab Navigation */}
+          {selection.kaynakKurulus && (
+            <div className="card">
+              <div className="border-b border-gray-200 dark:border-gray-700">
+                <nav className="flex space-x-8">
+                  <button
+                    onClick={() => setActiveTab('analysis')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'analysis'
+                        ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    💰 Nakit Akış Analizi
+                    {!isAnalysisReady && <span className="ml-2 text-warning-500">⚠️</span>}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('trends')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'trends'
+                        ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    📈 Trend Analizi
+                    {isTrendsReady && <span className="ml-2 text-success-500">✅</span>}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('export')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'export'
+                        ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    📥 Export & Raporlar
+                  </button>
+                </nav>
+              </div>
+
+              {/* Tab Content */}
+              <div className="py-6">
+                {activeTab === 'analysis' && (
+                  <>
+                    {isAnalysisReady ? (
+                      <AnalysisCard
+                        kaynakKurulus={selection.kaynakKurulus}
+                        fonNo={selection.fonNo}
+                        ihracNo={selection.ihracNo}
+                        faizOrani={selection.faizOrani!}
+                      />
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="text-warning-600 dark:text-warning-400 mb-4">
+                          <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                          Faiz Oranı Gerekli
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Nakit akış analizi için lütfen <strong>faiz oranını</strong> girin
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {activeTab === 'trends' && (
+                  <>
+                    {isTrendsReady ? (
+                      <div className="space-y-6">
+                        <TrendChart
+                          data={trendsData?.data || []}
+                          loading={trendsLoading}
+                          kaynakKurulus={selection.kaynakKurulus}
+                          title="Haftalık Trend Analizi"
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                          Trend Analizi
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Trend analizi için kuruluş seçimi yeterlidir
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {activeTab === 'export' && (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 dark:text-gray-500 mb-4">
+                      <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      Export İşlevselliği
+                    </h4>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      PDF ve Excel export özellikleri yakında eklenecek
+                    </p>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      🔄 Geliştirme aşamasında...
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
 
-          {/* Info Cards - Show when no analysis is ready */}
-          {(!selection.kaynakKurulus || !selection.faizOrani) && (
+          {/* Quick Stats - Show when no selection */}
+          {!selection.kaynakKurulus && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="metric-card">
                 <div className="metric-value text-primary-600">🏢</div>
                 <div className="metric-label">Kaynak Kuruluş</div>
                 <div className="metric-change">
-                  {selection.kaynakKurulus ? '✅ Seçildi' : '⏳ Seçim Bekleniyor'}
+                  ⏳ Seçim Bekleniyor
                 </div>
               </div>
 
               <div className="metric-card">
                 <div className="metric-value text-warning-600">📊</div>
-                <div className="metric-label">Faiz Oranı</div>
+                <div className="metric-label">Dashboard</div>
                 <div className="metric-change">
-                  {selection.faizOrani ? `✅ %${selection.faizOrani}` : '⏳ Giriş Bekleniyor'}
+                  🎯 Hazır
                 </div>
               </div>
 
               <div className="metric-card">
                 <div className="metric-value text-success-600">🔄</div>
-                <div className="metric-label">Analiz Durumu</div>
+                <div className="metric-label">API Durumu</div>
                 <div className="metric-change">
-                  {(selection.kaynakKurulus && selection.faizOrani) ? '✅ Hazır' : '⏳ Parametreler Eksik'}
+                  {healthData ? '✅ Bağlı' : '⏳ Kontrol Ediliyor'}
                 </div>
               </div>
             </div>
           )}
-
-          {/* Features Overview */}
-          <div className="card">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              🚀 Dashboard Özellikleri
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl mb-2">💰</div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">Nakit Akış Analizi</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Real-time hesaplama</div>
-              </div>
-              
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl mb-2">📊</div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">Performans Metrikleri</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Detaylı raporlama</div>
-              </div>
-              
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl mb-2">🎯</div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">Akıllı Filtreler</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Hiyerarşik seçim</div>
-              </div>
-              
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="text-2xl mb-2">📥</div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">Export İşlemleri</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">PDF & Excel çıktı</div>
-              </div>
-            </div>
-          </div>
 
           {/* Current Selection Summary */}
           {selection.kaynakKurulus && (
@@ -195,7 +282,7 @@ const MainDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Quick Stats */}
+          {/* System Status */}
           {healthData && (
             <div className="card">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">

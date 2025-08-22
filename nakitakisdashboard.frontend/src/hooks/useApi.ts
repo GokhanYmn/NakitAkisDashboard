@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import ApiService from '../services/api';
-import { ApiResponse, AnalysisResponse, VariableOption, HealthCheckResponse } from '../types/api';
+import { ApiResponse, AnalysisResponse, VariableOption, HealthCheckResponse, TrendDataPoint } from '../types/api';
 
 // Generic API hook
 export function useApi<T>(
@@ -109,6 +109,20 @@ export function useAnalysisSummary(kaynakKurulus: string, faizOrani: number) {
 }
 
 // Trends hooks
+export function useSimpleTrends(
+  kaynakKurulus: string, 
+  period: string = 'week', 
+  fonNo?: string, 
+  ihracNo?: string, 
+  limit: number = 100
+) {
+  return useApi<ApiResponse<TrendDataPoint[]>>(
+    () => ApiService.getSimpleTrends(kaynakKurulus, period, fonNo, ihracNo, limit),
+    [kaynakKurulus, period, fonNo, ihracNo, limit],
+    !!kaynakKurulus
+  );
+}
+
 export function useTrendsSummary(kaynakKurulus: string, period: string = 'week') {
   return useApi<ApiResponse<any>>(
     () => ApiService.getTrendsSummary(kaynakKurulus, period),
