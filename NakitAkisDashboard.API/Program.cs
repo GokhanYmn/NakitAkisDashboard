@@ -1,4 +1,6 @@
-﻿using NakitAkisDashboard.API.Services;
+﻿// NakitAkisDashboard.API/Program.cs - CORS FIX
+
+using NakitAkisDashboard.API.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,15 +31,28 @@ builder.Services.AddScoped<IExportService, ExportService>();
 builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
-// CORS - Sadece React için
+// CORS - UPDATED FOR REACT WITH HTTPS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
+        policy.WithOrigins(
+            "http://localhost:3000",
+            "https://localhost:3000",
+            "http://127.0.0.1:3000",
+            "https://127.0.0.1:3000"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
+
+    // Development için daha geniş CORS
+    options.AddPolicy("Development", policy =>
+    {
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
@@ -64,6 +79,14 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Nakit Akış Dashboard API V1");
         c.RoutePrefix = "swagger";
     });
+
+    // Development CORS
+    app.UseCors("Development");
+}
+else
+{
+    // Production CORS
+    app.UseCors("ReactApp");
 }
 
 // Database Connection Test
@@ -84,12 +107,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("ReactApp");
 app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-// Welcome Endpoint
+// Welcome Endpoint - UPDATED
 app.MapGet("/", () => Results.Json(new
 {
     message = "🚀 Nakit Akış Dashboard API",
@@ -104,6 +126,11 @@ app.MapGet("/", () => Results.Json(new
         trends = "/api/trends",
         variables = "/api/variables",
         export = "/api/export"
+    },
+    cors = new
+    {
+        allowedOrigins = new[] { "http://localhost:3000", "https://localhost:3000" },
+        development = app.Environment.IsDevelopment()
     }
 }));
 
@@ -113,7 +140,7 @@ Log.Information("📡 API Base URL: https://localhost:7289");
 Log.Information("📖 Swagger UI: https://localhost:7289/swagger");
 Log.Information("❤️ Health Check: https://localhost:7289/health");
 Log.Information("🗄️ Database: PostgreSQL");
-Log.Information("⚛️ CORS: React App (localhost:3000)");
+Log.Information("⚛️ CORS: React App (localhost:3000) + Development mode");
 Log.Information("⚡ Ready for React Dashboard!");
 
 app.Run();

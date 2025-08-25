@@ -1,5 +1,3 @@
-// src/types/api.ts
-
 // API Response Types
 export interface ApiResponse<T> {
   success: boolean;
@@ -56,7 +54,12 @@ export interface TrendDataPoint {
   kaynakKurulus: string;
 }
 
-// Cash Flow Types
+// Cash Flow Types - YENİ!
+export interface CashFlowRequest {
+  period: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  limit: number;
+}
+
 export interface CashFlowDataPoint {
   timestamp: number;
   tarih: string;

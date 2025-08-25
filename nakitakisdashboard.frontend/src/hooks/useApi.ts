@@ -1,8 +1,13 @@
-// src/hooks/useApi.ts
-
 import { useState, useEffect, useCallback } from 'react';
 import ApiService from '../services/api';
-import { ApiResponse, AnalysisResponse, VariableOption, HealthCheckResponse, TrendDataPoint } from '../types/api';
+import { 
+  ApiResponse, 
+  AnalysisResponse, 
+  VariableOption, 
+  HealthCheckResponse, 
+  TrendDataPoint,
+  CashFlowDataPoint 
+} from '../types/api';
 
 // Generic API hook
 export function useApi<T>(
@@ -139,13 +144,51 @@ export function useRealtimeTrendStatus(kaynakKurulus: string) {
   );
 }
 
-// Cash flow analysis hook
+// === CASH FLOW HOOKS - YENİ! ===
 export function useCashFlowAnalysis(period: string = 'month', limit: number = 100) {
-  return useApi<ApiResponse<any>>(
+  return useApi<ApiResponse<CashFlowDataPoint[]>>(
     () => ApiService.getCashFlowAnalysis(period, limit),
     [period, limit],
     true
   );
+}
+
+// Manual Cash Flow Hook - Period değişiklikleri için
+export function useManualCashFlow() {
+  const [data, setData] = useState<ApiResponse<CashFlowDataPoint[]> | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchCashFlow = useCallback(async (period: string = 'month', limit: number = 100) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await ApiService.getCashFlowAnalysis(period, limit);
+      setData(result);
+      return result;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Cash Flow API çağrısı başarısız';
+      setError(errorMessage);
+      console.error('Cash Flow API Error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const reset = useCallback(() => {
+    setData(null);
+    setError(null);
+    setLoading(false);
+  }, []);
+
+  return {
+    data,
+    loading,
+    error,
+    fetchCashFlow,
+    reset
+  };
 }
 
 // Export formats hook
